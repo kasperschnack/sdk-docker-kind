@@ -47,6 +47,12 @@ Du kommer til at:
 
 På macOS og Windows er Docker Desktop den nemmeste måde at komme i gang på. På Linux kan du installere Docker Engine direkte.
 
+Windows:
+
+- Installer Docker Desktop for Windows fra den officielle download-side: <https://www.docker.com/products/docker-desktop/>
+- Følg den officielle installationsguide her: <https://docs.docker.com/desktop/setup/install/windows-install/>
+- Hvis du bruger Windows, er Docker Desktop det, vi tager udgangspunkt i i workshoppen
+
 Ubuntu eksempel:
 
 ```bash
@@ -98,6 +104,23 @@ docker run --rm -p 5000:5000 flask-demo:local
 
 Besøg `http://localhost:5000`.
 
+Prøv også selv at ændre appen. Åbn `app.py` og ret teksten i `message`, for eksempel fra `Hej fra Flask i lokal Kubernetes` til noget andet.
+
+Når du har ændret filen, skal du bygge imaget igen og starte containeren igen for at se ændringen:
+
+```bash
+docker build -t flask-demo:local .
+docker run --rm -p 5000:5000 flask-demo:local
+```
+
+Verificer bagefter i browseren på `http://localhost:5000`, eller med:
+
+```bash
+curl http://localhost:5000
+```
+
+Hvis du stadig ser den gamle tekst, kører du sandsynligvis stadig den gamle container eller det gamle image.
+
 ### Hvad er der i Dockerfile'en?
 
 - Vi starter fra `python:3.11-slim`
@@ -122,6 +145,19 @@ Bind mount eksempel:
 docker run -v $(pwd)/output:/data busybox sh -c "echo 'Hej fra bind mount' > /data/hilsen.txt"
 cat output/hilsen.txt
 ```
+
+Et simpelt udviklingseksempel med bind mount:
+
+```bash
+cd examples/flask-demo
+docker run --rm -p 5000:5000 -v $(pwd):/app \
+  -e FLASK_APP=app.py \
+  flask-demo:local flask run --host=0.0.0.0 --port=5000 --debug
+```
+
+Nu bruger containeren filerne fra din lokale mappe, og Flask genstarter automatisk ved ændringer. Ret teksten i `message` i `app.py`, gem filen og genindlæs `http://localhost:5000`.
+
+Det er nyttigt i udvikling, fordi du kan teste små ændringer hurtigt. Når du bygger image, tester du det, der faktisk bliver pakket. Når du bruger bind mount, tester du hurtigere lokalt.
 
 ## Docker Compose med web og database
 
