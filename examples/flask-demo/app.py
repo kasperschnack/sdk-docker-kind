@@ -8,7 +8,7 @@ app = Flask(__name__)
 @app.route("/")
 def hello():
     return {
-        "message": "Hej fra Flask i lokal Kubernetes",
+        "message": "Hej fra Flask",
         "hostname": socket.gethostname(),
         "environment": os.environ.get("APP_ENV", "local"),
     }

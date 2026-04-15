@@ -194,13 +194,13 @@ Nu skifter vi perspektiv. I stedet for at arbejde i vores ITm8-setup bruger vi h
 - Godt til at lære `kubectl` og manifests
 - Ingen adgang til ITm8-infrastruktur eller eksternt registry er nødvendig
 
-Hvis målet er at forstå begreberne, er `kind` et bedre første skridt end at hoppe direkte ind i det fulde setup på ITm8s infrastruktur.
+Målet er at forstå begreberne, så `kind` er et bedre første skridt end at hoppe direkte ind i det fulde setup på ITm8s infrastruktur.
 
 ## Trin 2: Installer værktøjer
 
 Du skal bruge:
 
-- Docker
+- Docker (har vi allerede installeret ovenfor)
 - `kubectl`
 - `kind`
 
@@ -247,8 +247,6 @@ kubectl get nodes
 Vi bruger samme Flask-app som før.
 
 ```bash
-cd examples/flask-demo
-docker build -t flask-demo:local .
 kind load docker-image flask-demo:local --name workshop
 ```
 
@@ -261,7 +259,9 @@ Der ligger manifests i [examples/flask-demo/k8s](examples/flask-demo/k8s).
 Anvend dem:
 
 ```bash
-kubectl apply -f examples/flask-demo/k8s
+  kubectl apply -f examples/flask-demo/k8s/namespace.yaml
+  kubectl apply -f examples/flask-demo/k8s/service.yaml
+  kubectl apply -f examples/flask-demo/k8s/deployment.yaml
 ```
 
 Se hvad der bliver oprettet:
@@ -278,10 +278,18 @@ kubectl get services -n workshop
 I et lokalt cluster er `port-forward` den enkleste vej:
 
 ```bash
-kubectl port-forward -n workshop service/flask-demo 5000:5000
+kubectl port-forward -n workshop service/flask-demo 5001:5000
 ```
 
-Besøg `http://localhost:5000`.
+Besøg `http://localhost:5001`.
+
+Hvis appen også skal være tilgængelig fra andre maskiner på dit lokale netværk, kan du binde `port-forward` til alle interfaces:
+
+```bash
+kubectl port-forward --address 0.0.0.0 -n workshop service/flask-demo 5001:5000
+```
+
+Så kan appen nås på `http://<din-maskines-ip>:5001`. Brug kun det i netværk, du stoler på.
 
 ## Hvad er forskellen på de vigtigste ressourcer?
 
@@ -363,9 +371,9 @@ Ting du kan kigge efter:
 - [ ] Skalere en deployment
 - [ ] Slette clusteret igen
 
-## Hvad blev ikke dækket?
+## Hvad blev der bla. ikke dækket?
 
-- Ingress controllers
+- Ingress controllers/API Gateway
 - Persistent volumes i dybden
 - Helm charts
 - ConfigMaps og Secrets i mere realistiske setups
