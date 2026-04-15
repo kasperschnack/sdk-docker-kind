@@ -14,13 +14,6 @@ Du kommer til at:
 
 ## Læringsmål
 
-### Du vil lære om:
-
-- Docker fundamentals
-  - Hvad er en container?
-  - Forskellen på containere og virtuelle maskiner
-  - Images, containers og lag
-
 - Praktisk Docker
   - Installation og opsætning
   - Docker CLI
@@ -36,35 +29,30 @@ Du kommer til at:
   - `Pod`, `Deployment`, `Service` og `Namespace`
   - Port-forwarding, logs og simpel fejlfinding
 
-- Hands-on
-  - Byg en Flask-app
-  - Kør den med Docker
-  - Deploy den i lokal Kubernetes
+## Før du går i gang
 
-## Sektion 1: Containere
+Før du hopper ned i eksemplerne, skal vi sikre de praktiske forudsætninger, især på Windows-udviklerpc'er:
 
-### Trin 1: Kom i gang med Docker
+1. Installer WSL, hvis du arbejder på Windows.
+2. Sørg for, at `git` er installeret inde i din WSL-distribution.
+3. Klon dette repository lokalt, så du har workshop-materialet på din maskine.
 
-På macOS og Windows er Docker Desktop den nemmeste måde at komme i gang på. På Linux kan du installere Docker Engine direkte.
-
-Windows:
-
-- Installer Docker Desktop for Windows fra den officielle download-side: <https://www.docker.com/products/docker-desktop/>
-- Følg den officielle installationsguide her: <https://docs.docker.com/desktop/setup/install/windows-install/>
-- Hvis du bruger Windows, er Docker Desktop det, vi tager udgangspunkt i i workshoppen
-
-Ubuntu eksempel:
+Eksempel i WSL:
 
 ```bash
 sudo apt update
-sudo apt install docker.io
-sudo systemctl enable --now docker
-sudo usermod -aG docker $USER
+sudo apt install -y git
+git --version
+git clone https://github.com/kasperschnack/aka-docker-local-k8s.git
+cd aka-docker-local-k8s
 ```
 
-Log ud og ind igen, hvis du har kørt `usermod`.
+Når det er på plads, kan du fortsætte med Docker-installation og derefter arbejde videre i eksemplerne som `examples/flask-demo`.
+Hvis Docker ikke allerede er installeret, ligger installationsvejledningen i appendix nederst.
 
-### Trin 2: Test at Docker virker
+## Sektion 1: Containere
+
+### Trin 1: Test at Docker virker
 
 ```bash
 docker run hello-world
@@ -78,16 +66,20 @@ Hvis du ser `Hello from Docker!`, er du klar.
 docker pull nginx
 docker images
 docker run -d -p 8080:80 nginx
+```
+
+Besøg `http://localhost:8080`.
+
+Stop og fjern containeren igen.
+```bash
 docker ps
 docker stop <container-id>
 docker rm <container-id>
 ```
 
-Besøg `http://localhost:8080`.
-
 ## Byg din egen container
 
-Der ligger et lille eksempel i [examples/flask-demo](examples/flask-demo).
+Vi tager udgangspunkt i det lille eksempel i [examples/flask-demo](examples/flask-demo).
 
 Byg imaget:
 
@@ -96,7 +88,7 @@ cd examples/flask-demo
 docker build -t flask-demo:local .
 ```
 
-Kør det:
+Kør containeren:
 
 ```bash
 docker run --rm -p 5000:5000 flask-demo:local
@@ -189,7 +181,7 @@ Nu skifter vi perspektiv. I stedet for at sende vores image til en cloud-provide
 
 Hvis målet er at forstå begreberne, er `kind` et bedre første skridt end at hoppe direkte i managed Kubernetes.
 
-## Trin 3: Installer værktøjer
+## Trin 2: Installer værktøjer
 
 Du skal bruge:
 
@@ -221,7 +213,7 @@ kubectl version --client
 kind version
 ```
 
-## Trin 4: Opret et cluster
+## Trin 3: Opret et cluster
 
 ```bash
 kind create cluster --name workshop
@@ -235,7 +227,7 @@ kubectl cluster-info
 kubectl get nodes
 ```
 
-## Trin 5: Byg et image og load det ind i clusteret
+## Trin 4: Byg et image og load det ind i clusteret
 
 Vi bruger samme Flask-app som før.
 
@@ -247,7 +239,7 @@ kind load docker-image flask-demo:local --name workshop
 
 `kind` kan ikke automatisk se alle images fra din lokale Docker daemon som et normalt registry ville kunne. Derfor loader vi imaget direkte ind i clusteret.
 
-## Trin 6: Deploy appen i Kubernetes
+## Trin 5: Deploy appen i Kubernetes
 
 Der ligger manifests i [examples/flask-demo/k8s](examples/flask-demo/k8s).
 
@@ -266,7 +258,7 @@ kubectl get pods -n workshop
 kubectl get services -n workshop
 ```
 
-## Trin 7: Gør appen tilgængelig
+## Trin 6: Gør appen tilgængelig
 
 I et lokalt cluster er `port-forward` den enkleste vej:
 
@@ -289,7 +281,7 @@ En god mental model er:
 - Compose kører flere containere sammen
 - Kubernetes holder workloads kørende og giver dig en deklarativ model
 
-## Trin 8: Fejlfinding med `kubectl`
+## Trin 7: Fejlfinding med `kubectl`
 
 De vigtigste kommandoer i starten er:
 
@@ -302,7 +294,7 @@ kubectl get events -n workshop --sort-by=.lastTimestamp
 
 Hvis en pod ikke starter, er `describe` og `logs` som regel det rigtige første sted at kigge.
 
-## Trin 9: Skalering
+## Trin 8: Skalering
 
 ```bash
 kubectl scale deployment flask-demo --replicas=3 -n workshop
@@ -311,7 +303,7 @@ kubectl get pods -n workshop
 
 Nu kan du se, at Kubernetes holder tre ens pods kørende bag den samme service.
 
-## Trin 10: Ryd op
+## Trin 9: Ryd op
 
 Slet workloaden:
 
@@ -440,6 +432,31 @@ Det er meget tættere på et rigtigt cluster-livscyklusforløb end `kind`.
 ## Control plane og worker nodes
 
 I workshoppen så du pods og deployments. I Talos-setuppet skal vi først have maskinerne.
+
+## Appendix: Installer Docker
+
+Hvis du mangler Docker på din maskine, kan du bruge et af disse spor.
+
+### Windows
+
+På Windows er Docker Desktop den nemmeste vej.
+
+- Download Docker Desktop: <https://www.docker.com/products/docker-desktop/>
+- Følg installationsguiden for Windows: <https://docs.docker.com/desktop/setup/install/windows-install/>
+- I denne workshop tager vi udgangspunkt i Docker Desktop på Windows sammen med WSL
+
+### Ubuntu
+
+Et simpelt Ubuntu-eksempel:
+
+```bash
+sudo apt update
+sudo apt install docker.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+```
+
+Log ud og ind igen, hvis du har kørt `usermod`.
 
 Control plane provisioning sker i `ansible/roles/hypervisor/talos-vm/control-plane/tasks/main.yml` i `DevOps-kubernetes-master`.
 
